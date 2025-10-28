@@ -7,15 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, Sparkles, Loader2, Play, Download, Edit } from "lucide-react";
 import { ClipEditor } from "@/components/ClipEditor";
-
-interface Clip {
-  id: string;
-  title: string;
-  start_time: number;
-  end_time: number;
-  viral_score: number;
-  description: string;
-}
+import { Clip, EditedClip } from "@/types/clip";
 
 export const VideoAnalyzer = () => {
   const { toast } = useToast();
@@ -83,13 +75,7 @@ export const VideoAnalyzer = () => {
     return null;
   };
 
-  const handleSaveClipEdits = async (editedClip: {
-    id: string;
-    captions: string;
-    audio_url: string;
-    is_edited: boolean;
-    edited_at: string;
-  }) => {
+  const handleSaveClipEdits = async (editedClip: EditedClip) => {
     try {
       const { error } = await supabase
         .from('clips')

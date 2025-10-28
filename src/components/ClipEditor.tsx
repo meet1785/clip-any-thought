@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { DownloadGuide } from "@/components/DownloadGuide";
+import { Clip, EditedClip, Caption } from "@/types/clip";
 import { 
   Download, 
   Music, 
@@ -19,34 +20,9 @@ import {
 } from "lucide-react";
 
 interface ClipEditorProps {
-  clip: {
-    id: string;
-    title: string;
-    start_time: number;
-    end_time: number;
-    description: string;
-    viral_score: number;
-  };
+  clip: Clip;
   videoUrl: string;
-  onSave?: (editedClip: {
-    id: string;
-    title: string;
-    start_time: number;
-    end_time: number;
-    description: string;
-    viral_score: number;
-    captions: string;
-    audio_url: string;
-    is_edited: boolean;
-    edited_at: string;
-  }) => void;
-}
-
-interface Caption {
-  text: string;
-  startTime: number;
-  endTime: number;
-  position: 'top' | 'center' | 'bottom';
+  onSave?: (editedClip: EditedClip) => void;
 }
 
 export const ClipEditor = ({ clip, videoUrl, onSave }: ClipEditorProps) => {
