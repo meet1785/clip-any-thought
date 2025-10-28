@@ -487,7 +487,7 @@ Video Info:
                 <div className="p-4 bg-secondary/50 rounded-lg">
                   <p className="text-sm mb-2">Audio Preview:</p>
                   <audio controls className="w-full">
-                    <source src={audioUrl} />
+                    <source src={audioUrl.startsWith('http://') || audioUrl.startsWith('https://') ? audioUrl : ''} type="audio/mpeg" />
                     Your browser does not support audio playback.
                   </audio>
                 </div>
