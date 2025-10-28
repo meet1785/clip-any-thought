@@ -30,25 +30,13 @@ export const Hero = () => {
           Turn long videos into shorts, and publish them to all social platforms in one click.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16 max-w-3xl mx-auto">
-          <div className="relative flex-1 w-full">
-            <Link className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-              placeholder="Drop a video link"
-              className="pl-12 h-14 bg-secondary/50 backdrop-blur-sm border-border text-lg"
-            />
-          </div>
-          <Button size="lg" className="h-14 px-8 text-lg font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-all">
-            Get free clips
-          </Button>
-          <span className="text-muted-foreground">or</span>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
           <Button 
             size="lg" 
-            variant="outline" 
-            className="h-14 px-8 text-lg font-semibold border-2 hover:bg-secondary/50 transition-all"
+            className="h-14 px-8 text-lg font-semibold bg-accent text-accent-foreground hover:bg-accent/90 transition-all"
+            onClick={() => document.getElementById('analyzer')?.scrollIntoView({ behavior: 'smooth' })}
           >
-            <Upload className="mr-2 h-5 w-5" />
-            Upload files
+            Try It Now
           </Button>
         </div>
 
