@@ -5,7 +5,8 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Link, Sparkles, Loader2, Play } from "lucide-react";
+import { Link, Sparkles, Loader2, Play, Download, Edit } from "lucide-react";
+import { ClipEditor } from "@/components/ClipEditor";
 
 interface Clip {
   id: string;
@@ -23,6 +24,7 @@ export const VideoAnalyzer = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [clips, setClips] = useState<Clip[]>([]);
   const [videoId, setVideoId] = useState("");
+  const [editingClipId, setEditingClipId] = useState<string | null>(null);
 
   const handleAnalyze = async () => {
     if (!videoUrl.trim()) {
@@ -79,6 +81,37 @@ export const VideoAnalyzer = () => {
       return `https://www.youtube.com/embed/${videoIdMatch[1]}?start=${startTime}`;
     }
     return null;
+  };
+
+  const handleSaveClipEdits = async (editedClip: any) => {
+    try {
+      const { error } = await supabase
+        .from('clips')
+        .update({
+          captions: editedClip.captions,
+          audio_url: editedClip.audio_url,
+          is_edited: editedClip.is_edited,
+          edited_at: editedClip.edited_at
+        })
+        .eq('id', editedClip.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setClips(clips.map(c => c.id === editedClip.id ? { ...c, ...editedClip } : c));
+
+      toast({
+        title: "Success",
+        description: "Clip edits saved successfully",
+      });
+    } catch (error) {
+      console.error('Error saving clip edits:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save clip edits",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -186,20 +219,40 @@ export const VideoAnalyzer = () => {
                       
                       <p className="text-muted-foreground">{clip.description}</p>
                       
-                      <Button
-                        size="sm"
-                        className="bg-primary text-primary-foreground hover:bg-primary/90"
-                        onClick={() => {
-                          if (embedUrl) {
-                            window.open(embedUrl, '_blank');
-                          }
-                        }}
-                      >
-                        <Play className="mr-2 h-4 w-4" />
-                        Watch Clip
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="bg-primary text-primary-foreground hover:bg-primary/90"
+                          onClick={() => {
+                            if (embedUrl) {
+                              window.open(embedUrl, '_blank');
+                            }
+                          }}
+                        >
+                          <Play className="mr-2 h-4 w-4" />
+                          Watch Clip
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setEditingClipId(clip.id)}
+                        >
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit & Download
+                        </Button>
+                      </div>
                     </div>
                   </div>
+                  
+                  {editingClipId === clip.id && (
+                    <div className="mt-6 border-t pt-6">
+                      <ClipEditor 
+                        clip={clip} 
+                        videoUrl={videoUrl} 
+                        onSave={handleSaveClipEdits}
+                      />
+                    </div>
+                  )}
                 </Card>
               );
             })}
