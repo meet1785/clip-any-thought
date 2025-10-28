@@ -57,11 +57,11 @@ export const VideoAnalyzer = () => {
         title: "Success!",
         description: data.message,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error analyzing video:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to analyze video",
+        description: error instanceof Error ? error.message : "Failed to analyze video",
         variant: "destructive",
       });
     } finally {
@@ -83,7 +83,13 @@ export const VideoAnalyzer = () => {
     return null;
   };
 
-  const handleSaveClipEdits = async (editedClip: any) => {
+  const handleSaveClipEdits = async (editedClip: {
+    id: string;
+    captions: string;
+    audio_url: string;
+    is_edited: boolean;
+    edited_at: string;
+  }) => {
     try {
       const { error } = await supabase
         .from('clips')
@@ -104,11 +110,11 @@ export const VideoAnalyzer = () => {
         title: "Success",
         description: "Clip edits saved successfully",
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error saving clip edits:', error);
       toast({
         title: "Error",
-        description: "Failed to save clip edits",
+        description: error instanceof Error ? error.message : "Failed to save clip edits",
         variant: "destructive",
       });
     }

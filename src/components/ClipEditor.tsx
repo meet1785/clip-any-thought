@@ -28,7 +28,18 @@ interface ClipEditorProps {
     viral_score: number;
   };
   videoUrl: string;
-  onSave?: (editedClip: any) => void;
+  onSave?: (editedClip: {
+    id: string;
+    title: string;
+    start_time: number;
+    end_time: number;
+    description: string;
+    viral_score: number;
+    captions: string;
+    audio_url: string;
+    is_edited: boolean;
+    edited_at: string;
+  }) => void;
 }
 
 interface Caption {
