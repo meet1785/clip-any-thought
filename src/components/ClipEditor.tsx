@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
+import { DownloadGuide } from "@/components/DownloadGuide";
 import { 
   Download, 
   Music, 
@@ -363,7 +364,7 @@ Video Info:
         </div>
 
         <Tabs defaultValue="captions" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="captions">
               <Type className="mr-2 h-4 w-4" />
               Captions
@@ -371,6 +372,10 @@ Video Info:
             <TabsTrigger value="audio">
               <Music className="mr-2 h-4 w-4" />
               Audio
+            </TabsTrigger>
+            <TabsTrigger value="download">
+              <Download className="mr-2 h-4 w-4" />
+              Download
             </TabsTrigger>
             <TabsTrigger value="preview">
               <Play className="mr-2 h-4 w-4" />
@@ -508,6 +513,15 @@ Video Info:
                 </p>
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="download" className="space-y-4">
+            <DownloadGuide
+              videoId={extractVideoId(videoUrl) || ''}
+              startTime={clip.start_time}
+              endTime={clip.end_time}
+              clipTitle={clip.title}
+            />
           </TabsContent>
 
           <TabsContent value="preview" className="space-y-4">
