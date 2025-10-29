@@ -14,32 +14,91 @@ export type Database = {
   }
   public: {
     Tables: {
+      clip_downloads: {
+        Row: {
+          clip_id: string | null
+          completed_at: string | null
+          created_at: string | null
+          file_size: number | null
+          file_url: string
+          format: string | null
+          id: string
+          quality: string | null
+          status: string | null
+        }
+        Insert: {
+          clip_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          file_size?: number | null
+          file_url: string
+          format?: string | null
+          id?: string
+          quality?: string | null
+          status?: string | null
+        }
+        Update: {
+          clip_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          file_size?: number | null
+          file_url?: string
+          format?: string | null
+          id?: string
+          quality?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clip_downloads_clip_id_fkey"
+            columns: ["clip_id"]
+            isOneToOne: false
+            referencedRelation: "clips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clips: {
         Row: {
+          audio_url: string | null
+          captions: string | null
           created_at: string
           description: string | null
+          download_url: string | null
+          edited_at: string | null
           end_time: number
           id: string
+          is_edited: boolean | null
           start_time: number
           title: string
           video_id: string
           viral_score: number
         }
         Insert: {
+          audio_url?: string | null
+          captions?: string | null
           created_at?: string
           description?: string | null
+          download_url?: string | null
+          edited_at?: string | null
           end_time: number
           id?: string
+          is_edited?: boolean | null
           start_time: number
           title: string
           video_id: string
           viral_score: number
         }
         Update: {
+          audio_url?: string | null
+          captions?: string | null
           created_at?: string
           description?: string | null
+          download_url?: string | null
+          edited_at?: string | null
           end_time?: number
           id?: string
+          is_edited?: boolean | null
           start_time?: number
           title?: string
           video_id?: string
