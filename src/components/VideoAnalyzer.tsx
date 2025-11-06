@@ -273,9 +273,14 @@ export const VideoAnalyzer = () => {
 
       {clips.length > 0 && (
         <div className="space-y-4">
-          <h3 className="text-2xl font-bold">
-            Generated Clips ({clips.length})
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-2xl font-bold">
+              Generated Clips ({clips.length})
+            </h3>
+            <div className="text-sm text-muted-foreground">
+              Press <kbd className="px-2 py-1 text-xs font-mono bg-secondary border border-border rounded">?</kbd> for keyboard shortcuts
+            </div>
+          </div>
           <div className="grid gap-4">
             {clips.map((clip, index) => {
               const embedUrl = getYoutubeEmbedUrl(videoUrl, clip.start_time);
@@ -307,7 +312,14 @@ export const VideoAnalyzer = () => {
                     
                     <div className="space-y-3">
                       <div className="flex items-start justify-between gap-4">
-                        <h4 className="text-xl font-bold">{clip.title}</h4>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-xl font-bold">{clip.title}</h4>
+                          {isSelected && (
+                            <span className="text-xs px-2 py-1 rounded-full bg-accent/20 text-accent font-medium">
+                              Selected
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <div className="px-3 py-1.5 rounded-full bg-accent/20 text-accent font-bold text-sm">
                             {clip.viral_score}
