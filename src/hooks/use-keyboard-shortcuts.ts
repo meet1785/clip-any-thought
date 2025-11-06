@@ -33,23 +33,18 @@ export const useKeyboardShortcuts = (
 
       for (const shortcut of shortcuts) {
         const keyMatches = event.key.toLowerCase() === shortcut.key.toLowerCase();
-        const ctrlMatches = shortcut.ctrlKey ? event.ctrlKey : !event.ctrlKey;
-        const metaMatches = shortcut.metaKey ? event.metaKey : !event.metaKey;
-        const shiftMatches = shortcut.shiftKey ? event.shiftKey : !event.shiftKey;
-        const altMatches = shortcut.altKey ? event.altKey : !event.altKey;
+        
+        // Check if all required modifiers are pressed
+        // For Ctrl/Meta, if either is specified, allow either key to match (cross-platform)
+        const requiresCtrlOrMeta = shortcut.ctrlKey || shortcut.metaKey;
+        const ctrlOrMetaMatches = requiresCtrlOrMeta 
+          ? (event.ctrlKey || event.metaKey) 
+          : (!event.ctrlKey && !event.metaKey);
+        
+        const shiftMatches = shortcut.shiftKey ? event.shiftKey : true;
+        const altMatches = shortcut.altKey ? event.altKey : true;
 
-        // For shortcuts that require Cmd/Ctrl, check either
-        const cmdCtrlMatches =
-          shortcut.ctrlKey || shortcut.metaKey
-            ? event.ctrlKey || event.metaKey
-            : !event.ctrlKey && !event.metaKey;
-
-        if (
-          keyMatches &&
-          (shortcut.ctrlKey || shortcut.metaKey ? cmdCtrlMatches : ctrlMatches && metaMatches) &&
-          shiftMatches &&
-          altMatches
-        ) {
+        if (keyMatches && ctrlOrMetaMatches && shiftMatches && altMatches) {
           event.preventDefault();
           shortcut.action();
           break;

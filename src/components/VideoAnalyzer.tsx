@@ -128,7 +128,7 @@ export const VideoAnalyzer = () => {
   const shortcuts: KeyboardShortcut[] = [
     {
       key: "Enter",
-      metaKey: true,
+      ctrlKey: true, // This will match both Ctrl and Cmd due to our hook implementation
       description: "Generate viral clips",
       action: () => {
         if (!isAnalyzing && videoUrl.trim()) {
@@ -188,7 +188,7 @@ export const VideoAnalyzer = () => {
           if (selectedClip) {
             const embedUrl = getYoutubeEmbedUrl(videoUrl, selectedClip.start_time);
             if (embedUrl) {
-              window.open(embedUrl, '_blank');
+              window.open(embedUrl, '_blank', 'noopener,noreferrer');
             }
           }
         }
@@ -345,7 +345,7 @@ export const VideoAnalyzer = () => {
                           className="bg-primary text-primary-foreground hover:bg-primary/90"
                           onClick={() => {
                             if (embedUrl) {
-                              window.open(embedUrl, '_blank');
+                              window.open(embedUrl, '_blank', 'noopener,noreferrer');
                             }
                           }}
                         >
