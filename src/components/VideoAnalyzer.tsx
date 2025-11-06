@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Link, Sparkles, Loader2, Play, Download, Edit } from "lucide-react";
+import { Link, Sparkles, Loader2, Play, Download, Edit, Keyboard } from "lucide-react";
 import { ClipEditor } from "@/components/ClipEditor";
 import { Clip, EditedClip } from "@/types/clip";
+import { useKeyboardShortcuts, KeyboardShortcut } from "@/hooks/use-keyboard-shortcuts";
+import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
 
 export const VideoAnalyzer = () => {
   const { toast } = useToast();
@@ -17,6 +19,9 @@ export const VideoAnalyzer = () => {
   const [clips, setClips] = useState<Clip[]>([]);
   const [videoId, setVideoId] = useState("");
   const [editingClipId, setEditingClipId] = useState<string | null>(null);
+  const [selectedClipIndex, setSelectedClipIndex] = useState<number>(0);
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+  const clipRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const handleAnalyze = async () => {
     if (!videoUrl.trim()) {
@@ -106,6 +111,101 @@ export const VideoAnalyzer = () => {
     }
   };
 
+  // Update clip refs when clips change
+  useEffect(() => {
+    clipRefs.current = clipRefs.current.slice(0, clips.length);
+  }, [clips]);
+
+  // Scroll to selected clip
+  const scrollToClip = (index: number) => {
+    clipRefs.current[index]?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  };
+
+  // Keyboard shortcuts configuration
+  const shortcuts: KeyboardShortcut[] = [
+    {
+      key: "Enter",
+      ctrlKey: true, // This will match both Ctrl and Cmd due to our hook implementation
+      description: "Generate viral clips",
+      action: () => {
+        if (!isAnalyzing && videoUrl.trim()) {
+          handleAnalyze();
+        }
+      },
+    },
+    {
+      key: "Escape",
+      description: "Close clip editor",
+      action: () => {
+        if (editingClipId) {
+          setEditingClipId(null);
+        }
+      },
+    },
+    {
+      key: "ArrowDown",
+      description: "Navigate to next clip",
+      action: () => {
+        if (clips.length > 0) {
+          const nextIndex = (selectedClipIndex + 1) % clips.length;
+          setSelectedClipIndex(nextIndex);
+          scrollToClip(nextIndex);
+        }
+      },
+    },
+    {
+      key: "ArrowUp",
+      description: "Navigate to previous clip",
+      action: () => {
+        if (clips.length > 0) {
+          const prevIndex = selectedClipIndex === 0 ? clips.length - 1 : selectedClipIndex - 1;
+          setSelectedClipIndex(prevIndex);
+          scrollToClip(prevIndex);
+        }
+      },
+    },
+    {
+      key: "e",
+      description: "Toggle clip editor for selected clip",
+      action: () => {
+        if (clips.length > 0) {
+          const selectedClip = clips[selectedClipIndex];
+          if (selectedClip) {
+            setEditingClipId(editingClipId === selectedClip.id ? null : selectedClip.id);
+          }
+        }
+      },
+    },
+    {
+      key: "p",
+      description: "Play/preview selected clip",
+      action: () => {
+        if (clips.length > 0) {
+          const selectedClip = clips[selectedClipIndex];
+          if (selectedClip) {
+            const embedUrl = getYoutubeEmbedUrl(videoUrl, selectedClip.start_time);
+            if (embedUrl) {
+              window.open(embedUrl, '_blank', 'noopener,noreferrer');
+            }
+          }
+        }
+      },
+    },
+    {
+      key: "?",
+      description: "Show keyboard shortcuts help",
+      action: () => {
+        setShowShortcutsHelp(!showShortcutsHelp);
+      },
+    },
+  ];
+
+  // Enable keyboard shortcuts
+  useKeyboardShortcuts(shortcuts, true);
+
   return (
     <div className="w-full space-y-8">
       <Card className="p-8 bg-card/50 backdrop-blur-sm border-border">
@@ -139,39 +239,60 @@ export const VideoAnalyzer = () => {
             />
           </div>
 
-          <Button
-            onClick={handleAnalyze}
-            disabled={isAnalyzing}
-            size="lg"
-            className="w-full h-14 text-lg font-semibold bg-accent text-accent-foreground hover:bg-accent/90"
-          >
-            {isAnalyzing ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Analyzing Video...
-              </>
-            ) : (
-              <>
-                <Sparkles className="mr-2 h-5 w-5" />
-                Generate Viral Clips
-              </>
-            )}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleAnalyze}
+              disabled={isAnalyzing}
+              size="lg"
+              className="flex-1 h-14 text-lg font-semibold bg-accent text-accent-foreground hover:bg-accent/90"
+            >
+              {isAnalyzing ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Analyzing Video...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-5 w-5" />
+                  Generate Viral Clips
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-14 px-4"
+              onClick={() => setShowShortcutsHelp(true)}
+              title="Keyboard Shortcuts (Press ?)"
+            >
+              <Keyboard className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </Card>
 
       {clips.length > 0 && (
         <div className="space-y-4">
-          <h3 className="text-2xl font-bold">
-            Generated Clips ({clips.length})
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-2xl font-bold">
+              Generated Clips ({clips.length})
+            </h3>
+            <div className="text-sm text-muted-foreground">
+              Press <kbd className="px-2 py-1 text-xs font-mono bg-secondary border border-border rounded">?</kbd> for keyboard shortcuts
+            </div>
+          </div>
           <div className="grid gap-4">
-            {clips.map((clip) => {
+            {clips.map((clip, index) => {
               const embedUrl = getYoutubeEmbedUrl(videoUrl, clip.start_time);
+              const isSelected = index === selectedClipIndex;
               return (
                 <Card
                   key={clip.id}
-                  className="p-6 bg-card/50 backdrop-blur-sm border-border hover:border-accent/50 transition-all"
+                  ref={(el) => (clipRefs.current[index] = el)}
+                  onClick={() => setSelectedClipIndex(index)}
+                  className={`p-6 bg-card/50 backdrop-blur-sm border-border hover:border-accent/50 transition-all cursor-pointer ${
+                    isSelected ? "ring-2 ring-accent border-accent" : ""
+                  }`}
                 >
                   <div className="grid md:grid-cols-[300px_1fr] gap-6">
                     <div className="aspect-video rounded-lg overflow-hidden bg-secondary">
@@ -191,7 +312,14 @@ export const VideoAnalyzer = () => {
                     
                     <div className="space-y-3">
                       <div className="flex items-start justify-between gap-4">
-                        <h4 className="text-xl font-bold">{clip.title}</h4>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-xl font-bold">{clip.title}</h4>
+                          {isSelected && (
+                            <span className="text-xs px-2 py-1 rounded-full bg-accent/20 text-accent font-medium">
+                              Selected
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <div className="px-3 py-1.5 rounded-full bg-accent/20 text-accent font-bold text-sm">
                             {clip.viral_score}
@@ -217,7 +345,7 @@ export const VideoAnalyzer = () => {
                           className="bg-primary text-primary-foreground hover:bg-primary/90"
                           onClick={() => {
                             if (embedUrl) {
-                              window.open(embedUrl, '_blank');
+                              window.open(embedUrl, '_blank', 'noopener,noreferrer');
                             }
                           }}
                         >
@@ -251,6 +379,13 @@ export const VideoAnalyzer = () => {
           </div>
         </div>
       )}
+
+      {/* Keyboard Shortcuts Help Dialog */}
+      <KeyboardShortcutsHelp
+        open={showShortcutsHelp}
+        onOpenChange={setShowShortcutsHelp}
+        shortcuts={shortcuts}
+      />
     </div>
   );
 };

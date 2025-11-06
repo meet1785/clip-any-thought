@@ -4,6 +4,30 @@
 
 **URL**: https://lovable.dev/projects/98c9c642-36d4-48ef-8131-e66c379520e4
 
+## Features
+
+### 🎬 AI-Powered Video Clipping
+- Analyze YouTube videos and generate viral clips automatically
+- AI suggests 3-5 clips with viral scores (0-100)
+- Custom prompts for targeted clip discovery
+
+### ✂️ Clip Editing
+- Add timed captions with position control
+- Audio overlay with volume adjustment
+- Multiple download methods (command-line, online services, browser extensions)
+
+### ⌨️ Keyboard Shortcuts
+Speed up your workflow with keyboard shortcuts! Press `?` to see all available shortcuts:
+
+- **⌘/Ctrl + Enter**: Generate clips
+- **↑/↓**: Navigate between clips
+- **E**: Toggle clip editor
+- **P**: Preview clip
+- **Escape**: Close editor
+- **?**: Show shortcuts help
+
+See [KEYBOARD_SHORTCUTS.md](./KEYBOARD_SHORTCUTS.md) for details.
+
 ## How can I edit this code?
 
 There are several ways of editing your application.
