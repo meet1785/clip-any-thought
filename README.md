@@ -11,6 +11,57 @@
 - AI suggests 3-5 clips with viral scores (0-100)
 - Custom prompts for targeted clip discovery
 
+### 🤖 NVIDIA AI setup
+The video analysis edge function is configured to use an OpenAI-compatible NVIDIA endpoint by default, so you do not need Claude Pro for clip generation.
+
+Set these Supabase secrets before deploying the function:
+
+```sh
+supabase secrets set NVIDIA_API_KEY=your_nvidia_api_key
+supabase secrets set NVIDIA_API_BASE_URL=https://integrate.api.nvidia.com/v1
+supabase secrets set NVIDIA_MODEL=meta/llama-3.1-70b-instruct
+```
+
+If you prefer generic variable names, the function also accepts `AI_API_KEY`, `AI_API_BASE_URL`, and `AI_MODEL` as fallbacks.
+
+To use DeepSeek or GLM instead, keep the same key and base URL, then change only `NVIDIA_MODEL` to one of the available NVIDIA-hosted model IDs, for example:
+
+```sh
+# DeepSeek
+supabase secrets set NVIDIA_MODEL=deepseek-ai/deepseek-v4-flash
+
+# or GLM
+supabase secrets set NVIDIA_MODEL=z-ai/glm-5.1
+```
+
+Other NVIDIA-hosted options that may work in this project include `deepseek-ai/deepseek-v4-pro`, `z-ai/glm4.7`, and `z-ai/glm5`.
+
+### Claude Code via NVIDIA NIM
+Claude Code itself still expects an Anthropic-compatible endpoint, so use the local proxy in `tools/claude-nim-proxy.py`.
+
+1. Export your NVIDIA key and choose a model:
+
+```sh
+export NVIDIA_API_KEY=your_nvidia_api_key
+export NVIDIA_MODEL=qwen/qwen3-coder-480b-a35b-instruct
+```
+
+2. Start the proxy:
+
+```sh
+python tools/claude-nim-proxy.py
+```
+
+3. In another terminal, launch Claude Code through the wrapper:
+
+```sh
+./tools/claude-nim.sh
+```
+
+The wrapper now pins Claude Code to a proxy-advertised model id so the CLI does not fall back to its own default selection before the proxy can route the request. The proxy advertises Claude-compatible model IDs, then routes all requests to the NVIDIA coding model from `NVIDIA_MODEL`. If you want GLM instead of the default coding model, set `NVIDIA_MODEL=z-ai/glm-5.1` before starting the proxy and wrapper. The proxy listens on `http://127.0.0.1:4000` by default.
+
+The wrapper follows the working `free-claude-code` pattern by using the local proxy token for both `ANTHROPIC_AUTH_TOKEN` and `ANTHROPIC_API_KEY`, then passing `--model sonnet`, which is one of the aliases the proxy now advertises.
+
 ### ✂️ Clip Editing
 - Add timed captions with position control
 - Audio overlay with volume adjustment

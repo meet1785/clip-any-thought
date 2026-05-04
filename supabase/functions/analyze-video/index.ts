@@ -15,10 +15,7 @@ serve(async (req) => {
     const { videoUrl, prompt } = await req.json();
     console.log('Analyzing video:', videoUrl);
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
-    }
+    const aiConfig = getAiConfig();
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -71,16 +68,18 @@ Consider factors like:
 - Quotable statements
 - Moments that tell a complete micro-story
 
-Ensure clips are 15-60 seconds long for optimal social media performance.`;
+Ensure clips are 15-60 seconds long for optimal social media performance.
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+Return only valid JSON. Do not include markdown fences, commentary, or extra prose.`;
+
+    const aiResponse = await fetch(`${aiConfig.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${aiConfig.apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: aiConfig.model,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: aiPrompt }
@@ -162,6 +161,26 @@ Ensure clips are 15-60 seconds long for optimal social media performance.`;
     );
   }
 });
+
+function getAiConfig() {
+  const apiKey = Deno.env.get('NVIDIA_API_KEY')
+    ?? Deno.env.get('AI_API_KEY')
+    ?? Deno.env.get('LOVABLE_API_KEY');
+
+  if (!apiKey) {
+    throw new Error('Set NVIDIA_API_KEY in Supabase secrets. AI_API_KEY and LOVABLE_API_KEY are also accepted as fallbacks.');
+  }
+
+  const baseUrl = (Deno.env.get('NVIDIA_API_BASE_URL')
+    ?? Deno.env.get('AI_API_BASE_URL')
+    ?? 'https://integrate.api.nvidia.com/v1').replace(/\/$/, '');
+
+  const model = Deno.env.get('NVIDIA_MODEL')
+    ?? Deno.env.get('AI_MODEL')
+    ?? 'meta/llama-3.1-70b-instruct';
+
+  return { apiKey, baseUrl, model };
+}
 
 function extractYoutubeId(url: string): string | null {
   const patterns = [

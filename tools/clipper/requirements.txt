@@ -1,0 +1,2 @@
+yt-dlp==2026.03.17
+youtube-transcript-api==1.2.3

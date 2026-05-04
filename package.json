@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "mock-backend": "node tools/mock-backend/server.mjs",
+    "dev:mock": "node tools/mock-backend/dev.mjs",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",

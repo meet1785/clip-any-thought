@@ -11,6 +11,46 @@ import { Clip, EditedClip } from "@/types/clip";
 import { useKeyboardShortcuts, KeyboardShortcut } from "@/hooks/use-keyboard-shortcuts";
 import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
 
+const USE_MOCK_BACKEND = String(import.meta.env.VITE_USE_MOCK_BACKEND).toLowerCase() === "true";
+const MOCK_BACKEND_URL = (import.meta.env.VITE_MOCK_BACKEND_URL || "http://localhost:8787").replace(/\/$/, "");
+
+const getVideoIdFromUrl = (url: string) => {
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
+  return match?.[1] || "video_mock";
+};
+
+const analyzeWithMockBackend = async (videoUrl: string, prompt?: string) => {
+  const response = await fetch(`${MOCK_BACKEND_URL}/analyze-video`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ videoUrl, prompt }),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || "Mock backend analysis failed");
+  }
+
+  return response.json();
+};
+
+const saveWithMockBackend = async (editedClip: EditedClip) => {
+  const response = await fetch(`${MOCK_BACKEND_URL}/clips/${editedClip.id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(editedClip),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || "Mock backend save failed");
+  }
+};
+
 export const VideoAnalyzer = () => {
   const { toast } = useToast();
   const [videoUrl, setVideoUrl] = useState("");
@@ -37,6 +77,23 @@ export const VideoAnalyzer = () => {
     setClips([]);
 
     try {
+      if (USE_MOCK_BACKEND) {
+        const data = await analyzeWithMockBackend(videoUrl, prompt || undefined);
+
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        setVideoId(data.videoId || getVideoIdFromUrl(videoUrl));
+        setClips(data.clips || []);
+
+        toast({
+          title: "Success!",
+          description: data.message || "Mock analysis complete",
+        });
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('analyze-video', {
         body: { videoUrl, prompt: prompt || undefined }
       });
@@ -56,9 +113,18 @@ export const VideoAnalyzer = () => {
       });
     } catch (error: unknown) {
       console.error('Error analyzing video:', error);
+
+      const errorMessage = error instanceof Error ? error.message : "Failed to analyze video";
+      const isNetworkResolutionIssue =
+        errorMessage.includes("Failed to send a request") ||
+        errorMessage.includes("ERR_NAME_NOT_RESOLVED") ||
+        errorMessage.includes("Failed to fetch");
+
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to analyze video",
+        description: isNetworkResolutionIssue
+          ? "Could not reach Supabase. Verify VITE_SUPABASE_URL and DNS for your project host, then restart the dev server."
+          : errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -82,6 +148,17 @@ export const VideoAnalyzer = () => {
 
   const handleSaveClipEdits = async (editedClip: EditedClip) => {
     try {
+      if (USE_MOCK_BACKEND) {
+        await saveWithMockBackend(editedClip);
+        setClips(clips.map(c => c.id === editedClip.id ? { ...c, ...editedClip } : c));
+
+        toast({
+          title: "Success",
+          description: "Clip edits saved locally (mock backend)",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('clips')
         .update({
